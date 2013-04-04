@@ -71,6 +71,7 @@ public class FileUploader {
 			colNames[i] = separator.nextToken();
 			
 		}
+		PreparedStatement SQL = prepareSQL(con,colNames,tableName);
 		//Tipos de campos:
 		actualLine = reader.readLine();
 		actualLine = actualLine.substring(1);
@@ -102,7 +103,7 @@ public class FileUploader {
 			}
 			System.out.println("");
 			
-			saveRecord(con,tableName,colNames,colTypes,dataRow);
+			saveRecord(SQL,colTypes,dataRow);
 		}
 		//saveRecord(con,tableName,colNames,colTypes,dataRow);
 		/*
@@ -144,9 +145,38 @@ public class FileUploader {
 		
 	}
 
+	private static PreparedStatement prepareSQL(Connection con,String[] colNames, String tableName) {
+		// TODO Auto-generated method stub
+		String insertSQL = String.format("insert into %s (", tableName);
+		for(int i=0;i<colNames.length;i++){
+			insertSQL = insertSQL+colNames[i]+",";
+		}
+		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
+		//System.out.println(insertSQL);
+		insertSQL = insertSQL.concat(" values(");
+		
+		for(int i=0;i<colNames.length;i++){
+			insertSQL = insertSQL+"?,";
+		}
+		
+		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
+		System.out.println(insertSQL);
+		PreparedStatement st= null;
+		try {
+			st = con.prepareStatement(insertSQL);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return st;
+	}
+/*
 	private static void saveRecord(Connection con,String tableName, String[] colNames,
 			String[] colTypes, String[] dataRow) {
+	*/	
+	private static void saveRecord(PreparedStatement SQL,String[] colTypes, String[] dataRow) {
 		// TODO Auto-generated method stub
+		/*
 		String insertSQL;
 		insertSQL = String.format("insert into %s (", tableName);
 		for(int i=0;i<colNames.length;i++){
@@ -161,16 +191,17 @@ public class FileUploader {
 		}
 		
 		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
+		*/
+		
+		/*Falta manejar los casos para los distintos tipos de inputs:*/
 		
 		try {
-			PreparedStatement SQL = con.prepareStatement(insertSQL);
 			SQL.setString(1, dataRow[0]);
 			SQL.setString(2, dataRow[1]);
 			SQL.setString(3, dataRow[2]);
 			SQL.executeUpdate();
 			
-			SQL.close();
-			con.close();
+			//SQL.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
