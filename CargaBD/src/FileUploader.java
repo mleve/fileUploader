@@ -14,47 +14,28 @@ import java.util.StringTokenizer;
 
 public class FileUploader {
 
-	public static void main(String[] args){
-		fileUploader("example.csv");
-	}
+	/*Clase para subir archivos de inputs, en formato .csv y 
+	 * codificacion ANSI a una base de datos.
+	 * Se asume que el formato de los archivos es el siguiente:
+	 * Las filas que empiezan con un # son comentarios y seran ignoradas al momento
+	 * de la insercion, las primeras 3 filas contienen, comentadas, los datos de la 
+	 * tabla donde guardar la información, el nombre de sus campos, y el tipo de estos,
+	 * se aceptan 3 tipos: STRING, INT, DATE.
+	 * Ejemplo:
+	 * #NOMBRE_TABLA
+	 * #CAMPO1;CAMPO2;CAMPO3...
+	 * #TIPO_CAMPO1;TIPO_CAMPO2;TIPO_CAMPO3...
+	 * DATOS;DATOS;DATOS
+	 * DATOS;DATOS;DATOS
+	 * ...
+	 * 
+	 * */
+	public FileUploader(){}
 	
-	private static Connection getDb(){
-		try{
-			Class.forName("oracle.jdbc.driver.OracleDriver");
-			
-		}
-		catch(ClassNotFoundException e){
-			System.out.println("Where is your Oracle JDBC Driver?");
-			e.printStackTrace();
-			return null;
-		}
-		Connection con=null;
-		
-		try {
-			con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe","dev","dev");
-			//probar coneccion
-			
-			if (con != null) {
-				System.out.println("You made it, take control your database now!");
-				return con;
-			} 
-			 else {
-				System.out.println("Failed to make connection!");
-				return null;
-			}
-			
-		} catch (SQLException e) {
-			System.out.println("Connection Failed! Check output console");
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
-	public static void fileUploader(String filename){
+	public void uploadFileToDb(String filename,Connection con){
 		FileReader fr = null;
 		BufferedReader reader = null;
 		StringTokenizer separator = null;
-		Connection con = getDb();
 		try {
 		fr = new FileReader(filename);			
 		reader = new BufferedReader(fr);
@@ -102,9 +83,9 @@ public class FileUploader {
 			dataRow = new String[columns];
 			for(int i=0;i<columns;i++){
 				dataRow[i] = separator.nextToken();
-				System.out.print(dataRow[i]+"\t");
+				//System.out.print(dataRow[i]+"\t");
 			}
-			System.out.println("");
+			//System.out.println("");
 			
 			saveRecord(SQL,colTypes,dataRow);
 		}
@@ -126,7 +107,7 @@ public class FileUploader {
 		
 	}
 
-	private static PreparedStatement prepareSQL(Connection con,String[] colNames, String tableName) {
+	private PreparedStatement prepareSQL(Connection con,String[] colNames, String tableName) {
 		// TODO Auto-generated method stub
 		String insertSQL = String.format("insert into %s (", tableName);
 		for(int i=0;i<colNames.length;i++){
@@ -140,7 +121,7 @@ public class FileUploader {
 		}
 		
 		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
-		System.out.println(insertSQL);
+		//System.out.println(insertSQL);
 		PreparedStatement st= null;
 		try {
 			st = con.prepareStatement(insertSQL);
@@ -151,7 +132,7 @@ public class FileUploader {
 		return st;
 	}
 
-	private static void saveRecord(PreparedStatement SQL,String[] colTypes, String[] dataRow) {
+	private void saveRecord(PreparedStatement SQL,String[] colTypes, String[] dataRow) {
 		// TODO Auto-generated method stub
 		
 		/*Tipos de entrada de inputs:
@@ -179,8 +160,6 @@ public class FileUploader {
 				}
 			}
 			SQL.executeUpdate();
-			
-			//SQL.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
