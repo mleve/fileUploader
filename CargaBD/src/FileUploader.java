@@ -6,13 +6,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.StringTokenizer;
 
 
 public class FileUploader {
 
 	public static void main(String[] args){
-		fileUploader("F2.csv");
+		fileUploader("example.csv");
 	}
 	
 	private static Connection getDb(){
@@ -64,8 +67,6 @@ public class FileUploader {
 		actualLine = actualLine.substring(1);
 		separator = new StringTokenizer(actualLine,";");
 		int columns = separator.countTokens();
-		
-		//System.out.println(columns);
 		String[] colNames = new String[columns];
 		for(int i=0;i<columns;i++){
 			colNames[i] = separator.nextToken();
@@ -82,12 +83,14 @@ public class FileUploader {
 		}
 
 		
-		
+		/*
 		System.out.println("nombre Tabla: "+tableName);
 		for(int i=0; i<colNames.length;i++){
 			System.out.print(colNames[i]+"\t");
 		}
 		System.out.println("");
+		
+		*/
 		//Datos de la tabla
 		String[] dataRow = null;		
 		while ((actualLine = reader.readLine()) != null)   {
@@ -105,28 +108,6 @@ public class FileUploader {
 			
 			saveRecord(SQL,colTypes,dataRow);
 		}
-		//saveRecord(con,tableName,colNames,colTypes,dataRow);
-		/*
-		System.out.println("primera fila de datos:");
-		for(int i=0;i<dataRow.length;i++)
-			System.out.print(dataRow[i]+"\t");
-		System.out.println("");
-		*/
-		
-		/*
-		actualLine = reader.readLine();
-		
-		
-		while ((actualLine = reader.readLine()) != null)   {
-			  // Print the content on the console
-			separator = new StringTokenizer(actualLine,",");
-			
-			while(separator.hasMoreTokens()){
-				System.out.print(separator.nextToken()+"\t");
-			}
-			System.out.println("");
-		}
-		*/
 		} catch (Exception e) {
 		// TODO Auto-generated catch block
 		System.out.println("Error al abrir el archivo de input");
@@ -152,7 +133,6 @@ public class FileUploader {
 			insertSQL = insertSQL+colNames[i]+",";
 		}
 		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
-		//System.out.println(insertSQL);
 		insertSQL = insertSQL.concat(" values(");
 		
 		for(int i=0;i<colNames.length;i++){
@@ -170,43 +150,40 @@ public class FileUploader {
 		}
 		return st;
 	}
-/*
-	private static void saveRecord(Connection con,String tableName, String[] colNames,
-			String[] colTypes, String[] dataRow) {
-	*/	
+
 	private static void saveRecord(PreparedStatement SQL,String[] colTypes, String[] dataRow) {
 		// TODO Auto-generated method stub
-		/*
-		String insertSQL;
-		insertSQL = String.format("insert into %s (", tableName);
-		for(int i=0;i<colNames.length;i++){
-			insertSQL = insertSQL+colNames[i]+",";
-		}
-		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
-		//System.out.println(insertSQL);
-		insertSQL = insertSQL.concat(" values(");
 		
-		for(int i=0;i<dataRow.length;i++){
-			insertSQL = insertSQL+"?,";
-		}
+		/*Tipos de entrada de inputs:
+		 * String
+		 * int
+		 * Date
+		 * 
+		 * */
 		
-		insertSQL = insertSQL.substring(0, insertSQL.length()-1)+")";
-		*/
+		for(int i=0;i<colTypes.length;i++)
+			colTypes[i].toLowerCase();
 		
-		/*Falta manejar los casos para los distintos tipos de inputs:*/
 		
 		try {
-			SQL.setString(1, dataRow[0]);
-			SQL.setString(2, dataRow[1]);
-			SQL.setString(3, dataRow[2]);
+			//Dependiendo del caso, indicamos que tipo de datos setear
+			for(int i=0; i<dataRow.length;i++){
+				if(colTypes[i].equals("string"))
+					SQL.setString(i+1, dataRow[i]);
+				else if(colTypes[i].equals("int"))
+					SQL.setInt(i+1, Integer.parseInt(dataRow[i]));
+				else if(colTypes[i].equals("date")){
+					SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+					java.sql.Date sqlDate = new java.sql.Date(formatter.parse(dataRow[i]).getTime());
+					SQL.setDate(i+1, sqlDate);
+				}
+			}
 			SQL.executeUpdate();
 			
 			//SQL.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		//System.out.println(insertSQL);
-		
+		}		
 	}
 }
